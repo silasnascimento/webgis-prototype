@@ -1,0 +1,19 @@
+O **NDVI** (Índice de Vegetação por Diferença Normalizada) é uma métrica amplamente utilizada em sensoriamento remoto para monitorar a saúde e a abundância da vegetação em uma área. A partir do cálculo do NDVI, várias informações relevantes podem ser extraídas, incluindo:
+
+1. **Saúde da Vegetação**: O NDVI indica o nível de vigor da vegetação. Valores altos de NDVI (próximos de 1) indicam vegetação densa e saudável, enquanto valores baixos (próximos de 0) ou negativos indicam vegetação estressada, solo exposto ou áreas sem vegetação.
+
+2. **Cobertura Vegetal**: É possível estimar a quantidade de cobertura vegetal em uma área. Regiões com maior cobertura tendem a ter valores de NDVI mais altos, enquanto áreas de baixa cobertura apresentam valores mais baixos.
+
+3. **Estimativa de Biomassa**: O NDVI pode ser correlacionado com a biomassa da vegetação, o que é útil em estudos agrícolas e ecológicos para medir a quantidade de matéria vegetal.
+
+4. **Análise de Desmatamento e Degradação Ambiental**: Comparações temporais de NDVI permitem detectar áreas que passaram por desmatamento ou degradação da vegetação, sendo útil no monitoramento de florestas e zonas protegidas.
+
+5. **Análise de Estresse Hídrico**: A vegetação sob estresse hídrico tende a apresentar valores de NDVI mais baixos, permitindo a identificação de áreas afetadas pela seca ou falta de irrigação.
+
+6. **Delimitação de Áreas Agrícolas**: O NDVI é utilizado na agricultura de precisão para monitorar o desenvolvimento das culturas, identificar falhas no plantio e auxiliar na gestão agrícola.
+
+7. **Previsão de Produção Agrícola**: Com o NDVI, é possível estimar a produtividade das safras, uma vez que ele reflete a saúde das plantas e o desenvolvimento da vegetação ao longo do tempo.
+
+8. **Monitoramento Sazonal**: O NDVI permite observar as mudanças sazonais na vegetação, como o ciclo de crescimento e dormência, e pode ser utilizado para estudar fenômenos como a fenologia.
+
+Essas informações tornam o NDVI uma ferramenta essencial para o monitoramento ambiental, planejamento agrícola, estudos de ecossistemas e gestão de recursos naturais.

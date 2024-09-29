@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #map {
+            width: 100%;
+            height: 720px;
+            position: relative;
+        }
+        #layerSelector {
+            position: absolute;
+            bottom: 100px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        #locationSelector {
+            margin-bottom: 10px;
+        }
+        #startButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #startButton:hover {
+            background-color: #45a049;
+        }
+        #imageContainer {
+            text-align: center;
+            margin-top: 20px;
+        }
+        #sentinelImage {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Setmap WebGIS</h1>
+    <div id="locationSelector">
+        <select id="stateSelect">
+            <option value="">Estado</option>
+        </select>
+        <select id="municipalitySelect">
+            <option value="">Município</option>
+        </select>
+    </div>
+    <div id="map"></div>
+    <div id="layerSelector">
+        <label><input type="radio" name="layer" value="osm" checked> OSM</label><br>
+        <label><input type="radio" name="layer" value="satellite"> Satellite</label><br>
+        <label><input type="radio" name="layer" value="hybrid"> Hybrid</label><br>
+        <label><input type="radio" name="layer" value="image"> Image</label>
+    </div>
+    <button id="startButton">INICIAR</button>
+    <div id="imageContainer">
+        <img id="sentinelImage" src="" alt="Sentinel-2 Image" />
+    </div>
+    <script>
+        var map = L.map('map').setView([-15, -47], 5);
+
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        var satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 19
+        });
+
+        var hybridLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 19
+        });
+
+        var imageLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19
+        });
+
+        var layers = {
+            'osm': osmLayer,
+            'satellite': satelliteLayer,
+            'hybrid': hybridLayer,
+            'image': imageLayer
+        };
+
+        document.getElementById('layerSelector').addEventListener('change', function(event) {
+            var layerValue = event.target.value;
+            for (var key in layers) {
+                if (layers.hasOwnProperty(key)) {
+                    map.removeLayer(layers[key]);
+                }
+            }
+            map.addLayer(layers[layerValue]);
+        });
+
+        // Fetch states
+        fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+            .then(response => response.json())
+            .then(states => {
+                const stateSelect = document.getElementById('stateSelect');
+                states.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.id;
+                    option.textContent = state.nome;
+                    stateSelect.appendChild(option);
+                });
+            });
+
+        // Update municipalities when state is selected
+        document.getElementById('stateSelect').addEventListener('change', function() {
+            const stateId = this.value;
+            const municipalitySelect = document.getElementById('municipalitySelect');
+            municipalitySelect.innerHTML = '<option value="">Select a municipality</option>';
+
+            if (stateId) {
+                fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${stateId}/municipios`)
+                    .then(response => response.json())
+                    .then(municipalities => {
+                        municipalities.forEach(municipality => {
+                            const option = document.createElement('option');
+                            option.value = municipality.id;
+                            option.textContent = municipality.nome;
+                            municipalitySelect.appendChild(option);
+                        });
+                    });
+            }
+        });
+
+        // Handle municipality selection
+        document.getElementById('municipalitySelect').addEventListener('change', function() {
+            const municipalityId = this.value;
+            const stateName = document.getElementById('stateSelect').options[document.getElementById('stateSelect').selectedIndex].text;
+            const municipalityName = this.options[this.selectedIndex].text;
+
+            if (municipalityId) {
+                // Use Nominatim to get coordinates for the municipality
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${municipalityName},${stateName},Brazil`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
+                            const center = [lat, lon];
+                            
+                            // Center the map on the municipality
+                            map.setView(center, 10);
+                        } else {
+                            console.log('Location not found');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+
+        // Handle START button click
+        document.getElementById('startButton').addEventListener('click', function() {
+            const center = map.getCenter();
+            const lat = center.lat;
+            const lon = center.lng;
+
+            fetch('/getSentinelImage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ lat: lat, lon: lon })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('sentinelImage').src = data.url;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
